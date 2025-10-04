@@ -1,0 +1,62 @@
+# --------------------------------------
+# 🧱 General / OS
+# --------------------------------------
+.DS_Store
+Thumbs.db
+
+# --------------------------------------
+# ⚙️ Node / Tooling
+# --------------------------------------
+node_modules/
+frontend-tooling/node_modules/
+npm-debug.log*
+yarn-error.log*
+dist/
+.vite/
+.husky/_/
+.lintstagedrc
+
+# --------------------------------------
+# 🐳 Docker volumes (named)
+# --------------------------------------
+db_data/
+wp_data/
+
+# --------------------------------------
+# 🧩 WordPress generated content
+# --------------------------------------
+wp-content/uploads/
+wp-content/upgrade/
+wp-content/cache/
+wp-content/debug.log
+
+# --------------------------------------
+# 🗝️ Environment files
+# --------------------------------------
+.env
+.env.local
+.env.production
+.env.development
+.env.test
+.env.*.local
+
+# --------------------------------------
+# 🎨 Default WordPress themes
+# --------------------------------------
+wp-content/themes/twentytwenty*
+
+# --------------------------------------
+# 🧩 WordPress core (handled by Docker volume)
+# --------------------------------------
+wp-admin/
+wp-includes/
+
+# --------------------------------------
+# 🚫 Misc
+# --------------------------------------
+.idea/
+.vscode/
+*.sql
+*.tar
+*.zip
+*.bak

@@ -1,0 +1,132 @@
+name: gender-gp-wp
+
+services:
+  # ---------------------------
+  # 🗄️ DATABASE
+  # ---------------------------
+  db:
+    image: ${DB_IMAGE:-mariadb:11}
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    restart: unless-stopped
+    environment:
+      - MARIADB_DATABASE=${DB_NAME:-wordpress}
+      - MARIADB_USER=${DB_USER:-wp}
+      - MARIADB_PASSWORD=${DB_PASSWORD:-wp}
+      - MARIADB_ROOT_PASSWORD=${DB_ROOT_PASSWORD:-root}
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mariadb -uroot -p${DB_ROOT_PASSWORD:-root} -e 'SELECT 1' >/dev/null 2>&1"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
+  # ---------------------------
+  # ⚡ REDIS CACHE
+  # ---------------------------
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--save", "", "--appendonly", "no", "--maxmemory", "256mb", "--maxmemory-policy", "allkeys-lru"]
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+  # ---------------------------
+  # 🌐 WORDPRESS
+  # ---------------------------
+  wordpress:
+    build:
+      context: .
+      dockerfile: Dockerfile.wp
+    depends_on:
+      db:
+        condition: service_started
+      redis:
+        condition: service_started
+    restart: unless-stopped
+    ports:
+      - "${WEB_PORT:-8080}:80"
+    environment:
+      - WORDPRESS_DB_HOST=db:3306
+      - WORDPRESS_DB_USER=${DB_USER:-wp}
+      - WORDPRESS_DB_PASSWORD=${DB_PASSWORD:-wp}
+      - WORDPRESS_DB_NAME=${DB_NAME:-wordpress}
+      - WORDPRESS_DEBUG=${WP_DEBUG:-1}
+      - WEB_PORT=${WEB_PORT:-8080}
+      - WP_HOME=http://localhost:${WEB_PORT}
+      - WP_SITEURL=http://localhost:${WEB_PORT}
+    volumes:
+      - wp_data:/var/www/html
+      - ./wp-content:/var/www/html/wp-content
+      - ./config/wp-config.php:/var/www/html/wp-config.php
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost/wp-login.php >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  # ---------------------------
+  # 🧰 WP-CLI
+  # ---------------------------
+  wpcli:
+    build:
+      context: .
+      dockerfile: Dockerfile.wpcli
+    depends_on:
+      wordpress:
+        condition: service_started
+    user: "33:33" # www-data
+    working_dir: /var/www/html
+    environment:
+      - WORDPRESS_DB_HOST=db:3306
+      - WORDPRESS_DB_USER=${DB_USER:-wp}
+      - WORDPRESS_DB_PASSWORD=${DB_PASSWORD:-wp}
+      - WORDPRESS_DB_NAME=${DB_NAME:-wordpress}
+      - WEB_PORT=${WEB_PORT:-8080}
+      - WP_HOME=http://localhost:${WEB_PORT}
+      - WP_SITEURL=http://localhost:${WEB_PORT}
+    volumes:
+      - wp_data:/var/www/html
+      - ./wp-content:/var/www/html/wp-content
+      - ./config/wp-config.php:/var/www/html/wp-config.php
+      - ./scripts:/scripts
+    entrypoint: ["wp"]
+
+  # ---------------------------
+  # 📬 MAILPIT (SMTP TEST)
+  # ---------------------------
+  mailpit:
+    image: axllent/mailpit:latest
+    restart: unless-stopped
+    ports:
+      - "8026:8025"   # UI: http://localhost:8026
+      - "1026:1025"   # SMTP
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8025/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  # ---------------------------
+  # 🧩 ADMINER (DB GUI)
+  # ---------------------------
+  adminer:
+    image: adminer:latest
+    restart: unless-stopped
+    ports:
+      - "8082:8080"  # UI: http://localhost:8082
+    environment:
+      ADMINER_DEFAULT_SERVER: db
+    depends_on:
+      - db
+
+# ---------------------------
+# 💾 VOLUMES
+# ---------------------------
+volumes:
+  db_data:
+  wp_data:

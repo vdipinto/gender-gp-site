@@ -1,0 +1,8 @@
+FROM wordpress:cli-php8.3
+
+# Switch to root to install packages, then drop privileges again.
+USER root
+RUN apk add --no-cache bash less mariadb-client
+USER www-data
+
+WORKDIR /var/www/html
