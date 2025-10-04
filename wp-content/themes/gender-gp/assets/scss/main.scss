@@ -1,0 +1,10 @@
+$brand: #1e40af;
+
+:root { --brand: #{$brand}; }
+
+body {
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+}
+
+a { color: var(--brand); }
+/* test */
