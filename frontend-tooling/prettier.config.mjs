@@ -1,6 +1,7 @@
 export default {
-  semi: true,
+  plugins: ["@prettier/plugin-php"],
+  printWidth: 100,
   singleQuote: true,
-  trailingComma: "all",
-  printWidth: 100
+  trailingComma: "es5",
+  tabWidth: 2
 };
