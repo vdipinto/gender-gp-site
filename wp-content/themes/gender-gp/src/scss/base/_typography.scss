@@ -1,0 +1,14 @@
+@use "../abstracts" as *;
+
+body {
+  color: $text;
+  font-family:
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    Roboto,
+    sans-serif;
+}
+a {
+  color: $brand;
+}

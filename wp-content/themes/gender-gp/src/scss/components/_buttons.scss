@@ -1,0 +1,11 @@
+@use "../abstracts" as *;
+
+.button,
+.wp-element-button {
+  display: inline-block;
+  padding: 0.625rem 1rem;
+  color: #fff;
+  background: $brand;
+  border-radius: $radius;
+  text-decoration: none;
+}
